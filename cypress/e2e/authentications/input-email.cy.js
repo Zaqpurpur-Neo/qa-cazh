@@ -1,6 +1,6 @@
 const input = {
-  email: "androidtesting117@gmail.com",
-  password: "8x8xsizf",
+  email: Cypress.env("AUTH_EMAIL"),
+  password: Cypress.env("AUTH_PASSWORD"),
 };
 
 describe("Input Email", () => {
