@@ -1,7 +1,5 @@
 const { defineConfig } = require("cypress");
-const dotenv = require("dotenv");
-
-dotenv.config();
+require("dotenv").config();
 
 module.exports = defineConfig({
   allowCypressEnv: true,
@@ -9,11 +7,8 @@ module.exports = defineConfig({
   e2e: {
     baseUrl: "https://v3.cazh.id/",
     setupNodeEvents(on, config) {
-      // implement node event listeners here
-      config.env = {
-        ...process.env,
-        ...config.env,
-      };
+      config.env.AUTH_EMAIL = process.env.AUTH_EMAIL;
+      config.env.PASSWORD_EMAIL = process.env.PASSWORD_EMAIL;
       return config;
     },
   },
