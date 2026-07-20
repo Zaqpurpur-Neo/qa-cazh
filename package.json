@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "name": "cazh-test-cy",
   "version": "1.0.0",
   "main": "index.js",
@@ -7,8 +6,6 @@
   "scripts": {
     "start": "cypress open"
   },
-=======
->>>>>>> 00e5fe342ca2ac466e63f0052b8f5fd662fe642d
   "devDependencies": {
     "cypress": "^15.18.1"
   }
