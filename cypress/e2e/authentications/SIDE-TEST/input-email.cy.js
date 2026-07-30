@@ -1,6 +1,6 @@
 const input = {
   email: Cypress.env("AUTH_EMAIL"),
-  password: Cypress.env("AUTH_PASSWORD"),
+  password: Cypress.env("PASSWORD_EMAIL"),
 };
 
 describe("Input Email", () => {

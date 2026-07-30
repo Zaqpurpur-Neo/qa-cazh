@@ -68,11 +68,24 @@ function setDropdown(locale) {
 }
 
 for (const [locale, localization] of Object.entries(localizations)) {
-  describe(`Auth Localization for ${locale}`, () => {
-    before(() => {
+  describe(`TEST-CASE: 1.xx | Auth Localization for ${locale}`, () => {
+    beforeEach(() => {
       // only visit /auth/login if not already there
       cy.visit(`/auth/login`);
       check.isOnLoginPage = true;
+
+      cy.on("uncaught:exception", (err, runnable) => {
+        if (
+          err.message.includes(
+            "ResizeObserver loop completed with undelivered notifications",
+          ) ||
+          err.message.includes("ResizeObserver loop limit exceeded")
+        ) {
+          return false; // Prevents Cypress from failing the test
+        }
+
+        return true;
+      });
     });
 
     it("Localization passes", () => {

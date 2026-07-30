@@ -4,9 +4,10 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "cypress open"
+    "start": "cypress open --config-file cypress.original.config.js"
   },
   "devDependencies": {
-    "cypress": "^15.18.1"
+    "cypress": "^15.18.1",
+    "dotenv": "^17.4.2"
   }
 }
