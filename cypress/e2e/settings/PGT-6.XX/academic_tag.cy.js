@@ -1908,7 +1908,6 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
 
   describe.only("TEST-GROUP: 8 | Edit Tag - Form Validation & Constraints [6.42 - 6.46]", () => {
     const fillDataCheck = config.dataTag.formEachTipeAnggota.all;
-    const { dialogErrorMessages } = config.dialogErrorMessages;
 
     it("TEST-ID: 6.42 | Kosongkan Nama Tag → klik Simpan", () => {
       cy.visit(config.path);
@@ -1930,7 +1929,32 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
         cy.wait(800);
 
         cy.get("div[data-slot='form-message']").contains(
-          dialogErrorMessages.namaTagRequired,
+          config.dialogErrorMessages.namaTagRequired,
+        );
+      });
+    });
+
+    it("TEST-ID: 6.43 | Kosongkan Kode Tag → klik Simpan", () => {
+      cy.visit(config.path);
+      cy.wait(800);
+
+      cy.wait(2000);
+
+      editSimpleFillOpenDialog(
+        fillDataCheck.kodeTag,
+        fillDataCheck.instansi[0],
+      ).then(() => {
+        cy.wait(1000);
+
+        simpleFillFormField("Kode Tag", "input", "");
+
+        cy.wait(800);
+        cy.contains("button", "Simpan").should("be.visible").click();
+
+        cy.wait(800);
+
+        cy.get("div[data-slot='form-message']").contains(
+          config.dialogErrorMessages.kodeTagRequired,
         );
       });
     });
