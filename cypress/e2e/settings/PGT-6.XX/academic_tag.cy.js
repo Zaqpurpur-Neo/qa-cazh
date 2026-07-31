@@ -13,6 +13,7 @@ const config = {
     namaTagRequired: "Nama Tag wajib diisi",
     kodeTagRequired: "Kode Tag wajib diisi",
     tipeAnggotaRequired: "Tipe Anggota wajib diisi",
+    statusRequired: "Status wajib diisi",
   },
 
   misc: {
@@ -256,6 +257,49 @@ function deleteSimpleFill(kodeTag, instansi) {
   });
 }
 
+function deleteSimpleFillCancel(kodeTag, instansi, withEsc = false) {
+  const target = kodeTag;
+
+  return cy.get("body").then(($body) => {
+    return cy
+      .get("tr .animate-pulse", { timeout: 12000 })
+      .should("not.exist")
+      .then(() => {
+        return cy
+          .get("tr .animate-pulse", { timeout: 12000 })
+          .should("not.exist")
+          .then(() => {
+            const found =
+              $body.find(`tr:contains(${target}):contains(${instansi})`)
+                .length > 0;
+
+            if (found) {
+              cy.wait(800);
+              cy.get(`tr:contains(${target}):contains(${instansi})`)
+                .find("svg.lucide-trash")
+                .closest("button")
+                .click();
+              cy.wait(800);
+              cy.contains("div[role='dialog']", "Hapus Tag").should(
+                "be.visible",
+              );
+              cy.wait(600);
+              if (withEsc) {
+                cy.press("Escape");
+              } else {
+                cy.contains("button", "Batal").should("be.visible").click();
+              }
+              cy.log(`Found and clicked cancel button for ${target}`);
+            } else {
+              cy.log(`No cancel button found for ${target}`);
+            }
+
+            return cy.wrap(found);
+          });
+      });
+  });
+}
+
 function editSimpleFillOpenDialogAlternative(kodeTag = [], instansi = []) {
   // Normalize both parameters to always be arrays
   const tags = Array.isArray(kodeTag) ? kodeTag : [kodeTag];
@@ -365,6 +409,26 @@ function waitUntilLoadingAnimationGone() {
           .should("not.exist");
       });
   });
+}
+
+function namaTagShouldExistOrNot(
+  namaTag = "",
+  path = config.dataTag.formCheckTagEach.guru,
+  contain = true,
+) {
+  cy.visit(path);
+  cy.wait(800);
+
+  cy.contains("label", "Nama Tag")
+    .should("be.visible")
+    .next()
+    .find("button[data-slot='dialog-trigger']")
+    .click({ force: true });
+
+  cy.get("div[role='dialog']", { timeout: 6000 }).should(
+    contain ? "contain" : "not.contain",
+    namaTag,
+  );
 }
 
 describe("TEST-CASE: 6.XX | Academic Tag", () => {
@@ -728,26 +792,6 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
   });
 
   describe("TEST-GROUP: 3 | Member Type Options & Integration Scope [6.12 - 6.15]", () => {
-    function namaTagShouldExistOrNot(
-      namaTag = "",
-      path = config.dataTag.formCheckTagEach.guru,
-      contain = true,
-    ) {
-      cy.visit(path);
-      cy.wait(800);
-
-      cy.contains("label", "Nama Tag")
-        .should("be.visible")
-        .next()
-        .find("button[data-slot='dialog-trigger']")
-        .click({ force: true });
-
-      cy.get("div[role='dialog']", { timeout: 6000 }).should(
-        contain ? "contain" : "not.contain",
-        namaTag,
-      );
-    }
-
     it("TEST-ID: 6.12 | Dropdown menampilkan 3 opsi: 'Semua', 'Siswa', 'Guru & Staff'", () => {
       cy.visit(config.path);
       cy.wait(800);
@@ -1906,7 +1950,7 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
     });
   });
 
-  describe.only("TEST-GROUP: 8 | Edit Tag - Form Validation & Constraints [6.42 - 6.46]", () => {
+  describe("TEST-GROUP: 8 | Edit Tag - Form Validation & Constraints [6.42 - 6.46]", () => {
     const fillDataCheck = config.dataTag.formEachTipeAnggota.all;
 
     it("TEST-ID: 6.42 | Kosongkan Nama Tag → klik Simpan", () => {
@@ -1958,9 +2002,339 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
         );
       });
     });
+
+    it("TEST-ID: 6.44 | Kosongkan field Status → klik Simpan", () => {
+      cy.visit(config.path);
+      cy.wait(800);
+
+      cy.wait(2000);
+
+      editSimpleFillOpenDialog(
+        fillDataCheck.kodeTag,
+        fillDataCheck.instansi[0],
+      ).then(() => {
+        cy.wait(1000);
+
+        simpleFillFormField("Status", "select", "Pilih Status");
+
+        cy.wait(800);
+        cy.contains("button", "Simpan").should("be.visible").click();
+
+        cy.wait(800);
+
+        cy.get("div[data-slot='form-message']").contains(
+          config.dialogErrorMessages.statusRequired,
+        );
+      });
+    });
+
+    it("TEST-ID: 6.45 | Kosongkan Tipe Member → klik Simpan", () => {
+      cy.visit(config.path);
+      cy.wait(800);
+
+      cy.wait(2000);
+
+      editSimpleFillOpenDialog(
+        fillDataCheck.kodeTag,
+        fillDataCheck.instansi[0],
+      ).then(() => {
+        cy.wait(1000);
+
+        simpleFillFormField("Tipe Anggota", "select", "Pilih Tipe Anggota");
+
+        cy.wait(800);
+        cy.contains("button", "Simpan").should("be.visible").click();
+
+        cy.wait(800);
+
+        cy.get("div[data-slot='form-message']").contains(
+          config.dialogErrorMessages.tipeAnggotaRequired,
+        );
+      });
+    });
+
+    it("TEST-ID: 6.46 | Ubah Kode Tag jadi kode yang sudah ada di Instansi yang sama (duplikat)", () => {
+      cy.visit(config.path);
+      cy.wait(800);
+
+      cy.wait(2000);
+
+      editSimpleFillOpenDialog(
+        fillDataCheck.kodeTag,
+        fillDataCheck.instansi[0],
+      ).then(() => {
+        cy.wait(1000);
+
+        simpleFillFormField("Kode Tag", "input", "PRI145-AUTOTEST");
+
+        cy.wait(800);
+        cy.contains("button", "Simpan").should("be.visible").click();
+
+        cy.wait(800);
+
+        cy.contains(
+          "section[aria-label='Notifications alt+T']",
+          "Kode tag sudah digunakan di instansi ini",
+        ).should("be.visible");
+      });
+    });
   });
 
-  describe("TEST-GROUP: 9 | Tag Status - Cross-Feature Visibility Impact [6.47 - 6.48]", () => {});
+  describe("TEST-GROUP: 9 | Tag Status - Cross-Feature Visibility Impact [6.47 - 6.48]", () => {
+    const fillDataCheck = config.dataTag.formEachTipeAnggota.all;
 
-  describe("TEST-GROUP: 10 | Delete Tag - Confirmation & Data Cleanup [6.49 - 6.54 ]", () => {});
+    it("TEST-ID: 6.47 | Set status tag ke 'Aktif' → buka fitur Data Siswa/Guru/Staff/Tagihan/Presensi Kegiatan", () => {
+      cy.visit(config.path);
+      cy.wait(800);
+
+      const fillDataBefore = config.dataTag.formEachTipeAnggota.all;
+      cy.wait(1200);
+      editSimpleFillOpenDialog(
+        fillDataBefore.kodeTag,
+        fillDataBefore.instansi[0],
+      )
+        .then((isDialogOpen) => {
+          cy.wait(2000);
+          if (isDialogOpen) {
+            simpleFillFormField("Status", "select", "Aktif");
+
+            cy.wait(800);
+            cy.contains("button", "Simpan").should("be.visible").click();
+
+            cy.get("div[role='dialog']", { timeout: 12000 }).should(
+              "not.exist",
+            );
+            cy.contains(
+              "section[aria-label='Notifications alt+T']",
+              "Tag berhasil diperbarui",
+            ).should("be.visible");
+          }
+        })
+        .then(() => {
+          namaTagShouldExistOrNot(
+            fillDataBefore.namaTag,
+            config.pathAndIDCheckDataTag.guru,
+            true,
+          );
+
+          namaTagShouldExistOrNot(
+            fillDataBefore.namaTag,
+            config.pathAndIDCheckDataTag.siswa,
+            true,
+          );
+
+          namaTagShouldExistOrNot(
+            fillDataBefore.namaTag,
+            config.pathAndIDCheckDataTag.staff,
+            true,
+          );
+        });
+    });
+
+    it("TEST-ID: 6.48 | Set status tag ke 'Tidak Aktif' → buka fitur terkait", () => {
+      cy.visit(config.path);
+      cy.wait(800);
+
+      const fillDataBefore = config.dataTag.formEachTipeAnggota.all;
+      cy.wait(1200);
+      editSimpleFillOpenDialog(
+        fillDataBefore.kodeTag,
+        fillDataBefore.instansi[0],
+      )
+        .then((isDialogOpen) => {
+          cy.wait(2000);
+          if (isDialogOpen) {
+            simpleFillFormField("Status", "select", "Tidak Aktif");
+
+            cy.wait(800);
+            cy.contains("button", "Simpan").should("be.visible").click();
+
+            cy.get("div[role='dialog']", { timeout: 12000 }).should(
+              "not.exist",
+            );
+            cy.contains(
+              "section[aria-label='Notifications alt+T']",
+              "Tag berhasil diperbarui",
+            ).should("be.visible");
+          }
+        })
+        .then(() => {
+          namaTagShouldExistOrNot(
+            fillDataBefore.namaTag,
+            config.pathAndIDCheckDataTag.guru,
+            false,
+          );
+
+          namaTagShouldExistOrNot(
+            fillDataBefore.namaTag,
+            config.pathAndIDCheckDataTag.siswa,
+            false,
+          );
+
+          namaTagShouldExistOrNot(
+            fillDataBefore.namaTag,
+            config.pathAndIDCheckDataTag.staff,
+            false,
+          );
+        });
+    });
+  });
+
+  describe("TEST-GROUP: 10 | Delete Tag - Confirmation & Data Cleanup [6.49 - 6.54 ]", () => {
+    it("TEST-ID: 6.49 | Klik Aksi → 'Hapus' di row tag", () => {
+      cy.visit(config.path);
+      cy.wait(800);
+
+      const fillDataBefore = config.dataTag.formEachTipeAnggota.all;
+      cy.wait(1200);
+
+      const target = fillDataBefore.kodeTag;
+      const instansi = fillDataBefore.instansi[0];
+
+      waitUntilLoadingAnimationGone().then(() => {
+        cy.wait(1200);
+        cy.get('body').then($body => {
+          const found = $body.find(`tr:contains(${target}):contains(${instansi})`).length > 0;
+          if (found) {
+            cy.wait(800);
+            cy.get(`tr:contains(${target}):contains(${instansi})`)
+                .find("svg.lucide-trash")
+                .closest("button")
+                .click();
+
+            cy.wait(800);
+            cy.contains("div[role='dialog']", "Hapus Tag").should(
+              "be.visible",
+            );
+
+            cy.contains("button", "Hapus").should("be.visible");
+            cy.contains("button", "Batal").should("be.visible")
+          }
+        });
+      });
+    });
+
+    it("TEST-ID: 6.50 | Klik btn 'Hapus' di popup konfirmasi", () => {
+      cy.visit(config.path);
+      cy.wait(800);
+
+      const fillDataBefore = config.dataTag.formEachTipeAnggota.all;
+      cy.wait(1200);
+
+      const target = fillDataBefore.kodeTag;
+      const instansi = fillDataBefore.instansi[0];
+
+      waitUntilLoadingAnimationGone().then(() => {
+        cy.wait(1200);
+        
+        deleteSimpleFill(target, instansi);
+
+        cy.wait(800);
+        cy.contains("div[role='dialog']", "Hapus Tag").should(
+          "not.exist",
+        );
+        cy.contains(
+          "section[aria-label='Notifications alt+T']",
+          "Tag berhasil dihapus",
+        ).should("be.visible");
+      });
+    });
+
+    it("TEST-ID: 6.51 | Buka popup Hapus → klik btn 'Batal'", () => {
+      cy.visit(config.path);
+      cy.wait(800);
+
+      const fillDataBefore = config.dataTag.formEachTipeAnggota.teacher;
+      cy.wait(1200);
+
+      const target = fillDataBefore.kodeTag;
+      const instansi = fillDataBefore.instansi[0];
+
+      waitUntilLoadingAnimationGone().then(() => {
+        cy.wait(1200);
+        
+        deleteSimpleFillCancel(target, instansi);
+
+        cy.wait(800);
+        cy.contains("div[role='dialog']", "Hapus Tag").should(
+          "not.exist",
+        );
+      });
+    });
+
+    it("TEST-ID: 6.52 | Buka popup Hapus → tekan Esc di keyboard", () => {
+      cy.visit(config.path);
+      cy.wait(800);
+
+      const fillDataBefore = config.dataTag.formEachTipeAnggota.teacher;
+      cy.wait(1200);
+
+      const target = fillDataBefore.kodeTag;
+      const instansi = fillDataBefore.instansi[0];
+
+      waitUntilLoadingAnimationGone().then(() => {
+        cy.wait(1200);
+        
+        deleteSimpleFillCancel(target, instansi, true);
+
+        cy.wait(800);
+        cy.contains("div[role='dialog']", "Hapus Tag").should(
+          "not.exist",
+        );
+
+      });
+    });
+
+    it("TEST-ID: 6.53 | Search sampai hasil tinggal 1 row → hapus row tersebut", () => {
+      cy.visit(config.path);
+      cy.wait(800);
+
+      const fillDataBefore = config.dataTag.formEachTipeAnggota.student;
+      cy.wait(1200);
+
+      cy.get("input[placeholder='Cari'][data-slot='input']").type(
+        fillDataBefore.kodeTag,
+      );
+      cy.wait(2000);
+
+      waitUntilLoadingAnimationGone().then(() => {
+        cy.wait(1200);
+        
+        deleteSimpleFill(fillDataBefore.kodeTag, fillDataBefore.instansi[0]);
+
+        cy.wait(800);
+        cy.contains("div[role='dialog']", "Hapus Tag").should(
+          "not.exist",
+        );
+        cy.contains(
+          "section[aria-label='Notifications alt+T']",
+          "Tag berhasil dihapus",
+        ).should("be.visible");
+
+        cy.wait(2000);
+
+        cy.get("tbody tr").each(($row) => {
+          cy.wrap($row).within(() => {
+            cy.get("td").should("contain.text", "Data Tag tidak ditemukan");
+          });
+        });
+      });
+    });
+
+    it("TEST-ID: 6.54 | Hapus tag → buka fitur Data Siswa / Presensi Kegiatan / Membuat Tagihan", () => {
+      cy.visit(config.path);
+      cy.wait(800);
+
+      const fillDataBefore = config.dataTag.formEachTipeAnggota.student;
+      cy.wait(1200);
+      
+      waitUntilLoadingAnimationGone().then(() => {
+        cy.wait(1200);
+
+        namaTagShouldExistOrNot(fillDataBefore.namaTag, config.pathAndIDCheckDataTag.siswa, false);
+        namaTagShouldExistOrNot(fillDataBefore.namaTag, config.pathAndIDCheckDataTag.guru, false);
+        namaTagShouldExistOrNot(fillDataBefore.namaTag, config.pathAndIDCheckDataTag.tagihan, false);
+      });
+    });
+  });
 });
