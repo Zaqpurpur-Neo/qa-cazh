@@ -4,10 +4,13 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "cypress open --config-file cypress.original.config.js"
+    "engine:startup": "DEBUG= cypress open --e2e --browser chromium --config-file cypress.original.config.js"
   },
   "devDependencies": {
+    "@bahmutov/cypress-esbuild-preprocessor": "^2.2.8",
     "cypress": "^15.18.1",
-    "dotenv": "^17.4.2"
-  }
+    "dotenv": "^17.4.2",
+    "esbuild": "^0.28.1"
+  },
+  "dependencies": {}
 }

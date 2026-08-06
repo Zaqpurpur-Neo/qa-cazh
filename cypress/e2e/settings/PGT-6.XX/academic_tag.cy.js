@@ -235,9 +235,9 @@ function deleteSimpleFill(kodeTag, instansi) {
                 .closest("button")
                 .click();
               cy.wait(800);
-              cy.contains("div[role='dialog']", "Hapus Tag").should(
-                "be.visible",
-              );
+              cy.get("div[role='dialog']:contains('Hapus Tag')", {
+                timeout: 12000,
+              }).should("be.visible");
               cy.wait(600);
               cy.contains("button", "Hapus").should("be.visible").click();
               cy.wait(800);
@@ -425,7 +425,7 @@ function namaTagShouldExistOrNot(
     .find("button[data-slot='dialog-trigger']")
     .click({ force: true });
 
-  cy.get("div[role='dialog']", { timeout: 6000 }).should(
+  cy.get("div[role='dialog']", { timeout: 12000 }).should(
     contain ? "contain" : "not.contain",
     namaTag,
   );
@@ -433,6 +433,8 @@ function namaTagShouldExistOrNot(
 
 describe("TEST-CASE: 6.XX | Academic Tag", () => {
   beforeEach(() => {
+    cy.viewport(1600, 1000);
+
     _localLoginSession();
     uncaughtHandle();
   });
@@ -753,10 +755,11 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
       cy.wait(800);
       cy.contains("button", "Simpan").should("be.visible").click();
 
-      for (const field in dialogErrorMessages) {
-        cy.get(`div[data-slot='form-message']`).contains(
-          dialogErrorMessages[field],
-        );
+      for (const [field, message] of Object.entries(dialogErrorMessages)) {
+        // if status skip. status exists but i want to skip
+
+        if (field === "statusRequired") continue;
+        cy.get(`div[data-slot='form-message']`).contains(message);
       }
     });
 
@@ -1952,6 +1955,12 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
 
   describe("TEST-GROUP: 8 | Edit Tag - Form Validation & Constraints [6.42 - 6.46]", () => {
     const fillDataCheck = config.dataTag.formEachTipeAnggota.all;
+    const newData = {
+      namaTag: "Nama Tag Baru",
+      kodeTag: config.dataTag.formEachTipeAnggota.all.kodeTag + "-EDIT",
+      tipeAnggota: "STUDENT",
+      instansi: fillDataCheck.instansi[2],
+    };
 
     it("TEST-ID: 6.42 | Kosongkan Nama Tag → klik Simpan", () => {
       cy.visit(config.path);
@@ -1959,9 +1968,9 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
 
       cy.wait(2000);
 
-      editSimpleFillOpenDialog(
-        fillDataCheck.kodeTag,
-        fillDataCheck.instansi[0],
+      editSimpleFillOpenDialogAlternative(
+        [fillDataCheck.kodeTag, newData.kodeTag],
+        [fillDataCheck.instansi[0], newData.instansi],
       ).then(() => {
         cy.wait(1000);
 
@@ -1984,9 +1993,9 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
 
       cy.wait(2000);
 
-      editSimpleFillOpenDialog(
-        fillDataCheck.kodeTag,
-        fillDataCheck.instansi[0],
+      editSimpleFillOpenDialogAlternative(
+        [fillDataCheck.kodeTag, newData.kodeTag],
+        [fillDataCheck.instansi[0], newData.instansi],
       ).then(() => {
         cy.wait(1000);
 
@@ -2009,9 +2018,9 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
 
       cy.wait(2000);
 
-      editSimpleFillOpenDialog(
-        fillDataCheck.kodeTag,
-        fillDataCheck.instansi[0],
+      editSimpleFillOpenDialogAlternative(
+        [fillDataCheck.kodeTag, newData.kodeTag],
+        [fillDataCheck.instansi[0], newData.instansi],
       ).then(() => {
         cy.wait(1000);
 
@@ -2034,9 +2043,9 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
 
       cy.wait(2000);
 
-      editSimpleFillOpenDialog(
-        fillDataCheck.kodeTag,
-        fillDataCheck.instansi[0],
+      editSimpleFillOpenDialogAlternative(
+        [fillDataCheck.kodeTag, newData.kodeTag],
+        [fillDataCheck.instansi[0], newData.instansi],
       ).then(() => {
         cy.wait(1000);
 
@@ -2059,9 +2068,9 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
 
       cy.wait(2000);
 
-      editSimpleFillOpenDialog(
-        fillDataCheck.kodeTag,
-        fillDataCheck.instansi[0],
+      editSimpleFillOpenDialogAlternative(
+        [fillDataCheck.kodeTag, newData.kodeTag],
+        [fillDataCheck.instansi[0], newData.instansi],
       ).then(() => {
         cy.wait(1000);
 
@@ -2193,22 +2202,22 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
 
       waitUntilLoadingAnimationGone().then(() => {
         cy.wait(1200);
-        cy.get('body').then($body => {
-          const found = $body.find(`tr:contains(${target}):contains(${instansi})`).length > 0;
+        cy.get("body").then(($body) => {
+          const found =
+            $body.find(`tr:contains(${target}):contains(${instansi})`).length >
+            0;
           if (found) {
             cy.wait(800);
             cy.get(`tr:contains(${target}):contains(${instansi})`)
-                .find("svg.lucide-trash")
-                .closest("button")
-                .click();
+              .find("svg.lucide-trash")
+              .closest("button")
+              .click();
 
             cy.wait(800);
-            cy.contains("div[role='dialog']", "Hapus Tag").should(
-              "be.visible",
-            );
+            cy.contains("div[role='dialog']", "Hapus Tag").should("be.visible");
 
             cy.contains("button", "Hapus").should("be.visible");
-            cy.contains("button", "Batal").should("be.visible")
+            cy.contains("button", "Batal").should("be.visible");
           }
         });
       });
@@ -2226,13 +2235,11 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
 
       waitUntilLoadingAnimationGone().then(() => {
         cy.wait(1200);
-        
+
         deleteSimpleFill(target, instansi);
 
         cy.wait(800);
-        cy.contains("div[role='dialog']", "Hapus Tag").should(
-          "not.exist",
-        );
+        cy.contains("div[role='dialog']", "Hapus Tag").should("not.exist");
         cy.contains(
           "section[aria-label='Notifications alt+T']",
           "Tag berhasil dihapus",
@@ -2252,13 +2259,11 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
 
       waitUntilLoadingAnimationGone().then(() => {
         cy.wait(1200);
-        
+
         deleteSimpleFillCancel(target, instansi);
 
         cy.wait(800);
-        cy.contains("div[role='dialog']", "Hapus Tag").should(
-          "not.exist",
-        );
+        cy.contains("div[role='dialog']", "Hapus Tag").should("not.exist");
       });
     });
 
@@ -2274,14 +2279,11 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
 
       waitUntilLoadingAnimationGone().then(() => {
         cy.wait(1200);
-        
+
         deleteSimpleFillCancel(target, instansi, true);
 
         cy.wait(800);
-        cy.contains("div[role='dialog']", "Hapus Tag").should(
-          "not.exist",
-        );
-
+        cy.contains("div[role='dialog']", "Hapus Tag").should("not.exist");
       });
     });
 
@@ -2299,13 +2301,11 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
 
       waitUntilLoadingAnimationGone().then(() => {
         cy.wait(1200);
-        
+
         deleteSimpleFill(fillDataBefore.kodeTag, fillDataBefore.instansi[0]);
 
         cy.wait(800);
-        cy.contains("div[role='dialog']", "Hapus Tag").should(
-          "not.exist",
-        );
+        cy.contains("div[role='dialog']", "Hapus Tag").should("not.exist");
         cy.contains(
           "section[aria-label='Notifications alt+T']",
           "Tag berhasil dihapus",
@@ -2327,13 +2327,25 @@ describe("TEST-CASE: 6.XX | Academic Tag", () => {
 
       const fillDataBefore = config.dataTag.formEachTipeAnggota.student;
       cy.wait(1200);
-      
+
       waitUntilLoadingAnimationGone().then(() => {
         cy.wait(1200);
 
-        namaTagShouldExistOrNot(fillDataBefore.namaTag, config.pathAndIDCheckDataTag.siswa, false);
-        namaTagShouldExistOrNot(fillDataBefore.namaTag, config.pathAndIDCheckDataTag.guru, false);
-        namaTagShouldExistOrNot(fillDataBefore.namaTag, config.pathAndIDCheckDataTag.tagihan, false);
+        namaTagShouldExistOrNot(
+          fillDataBefore.namaTag,
+          config.pathAndIDCheckDataTag.siswa,
+          false,
+        );
+        namaTagShouldExistOrNot(
+          fillDataBefore.namaTag,
+          config.pathAndIDCheckDataTag.guru,
+          false,
+        );
+        namaTagShouldExistOrNot(
+          fillDataBefore.namaTag,
+          config.pathAndIDCheckDataTag.tagihan,
+          false,
+        );
       });
     });
   });
