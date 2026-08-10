@@ -90,6 +90,7 @@ module.exports = defineConfig({
     baseUrl: "https://v3.cazh.id/",
     numTestsKeptInMemory: 0,
     experimentalMemoryManagement: true,
+    downloadsFolder: "cypress/downloads",
 
     video: false,
     screenshotOnRunFailure: false,

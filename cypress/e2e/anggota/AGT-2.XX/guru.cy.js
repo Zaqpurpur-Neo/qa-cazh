@@ -5,6 +5,12 @@ import {
   group,
   _localLoginSession,
   uncaughtHandle,
+  buttonDropdownSelect,
+  buttonDropdownTableColumnMenuItem,
+  searchInput,
+  waitUntilLoadingAnimationGone,
+  forEachWrap,
+  filterButtonClick,
 } from "./extends";
 
 [name("AGT")];
@@ -17,16 +23,205 @@ describe("TEST-CASE: 2.XX | Anggota Guru", () => {
   });
 
   [group(2.1, "2.10")];
-  describe("1. Teacher List - View, Sort, Search & Filter @AGT", () => {
+  describe("1. Teaceher List - View, Sort, Search & Filter @AGT", () => {
     [id(2.1)];
     it("Load halaman Guru", () => {
       cy.visit(configAcademicGuru.path);
       cy.wait(800);
+
+      const tableHeader = configAcademicGuru.misc.tableHeader;
+
+      cy.get("thead tr th").each((header, index) => {
+        cy.wrap(header).should("contain.text", tableHeader[index]);
+      });
+    });
+
+    [id(2.2)];
+    it("Buka halaman Guru saat belum ada data", () => {
+      // intercept
+      cy.visit(configAcademicGuru.path);
+      cy.wait(800);
+
+      cy.intercept(
+        "GET",
+        "https://v3.cazh.id/api/proxy/teachers?page=1&limit=10&type=TEACHER&status=ACTIVE%2CINACTIVE",
+        {
+          statusCode: 200,
+          body: {
+            status: true,
+            message: "OK",
+            data: [],
+            meta: {
+              page: 1,
+              limit: 10,
+              total_count: 0,
+            },
+          },
+        },
+      );
+
+      waitUntilLoadingAnimationGone().then(() => {
+        cy.get("tbody td").should("contain.text", "Data Guru tidak ditemukan");
+      });
+    });
+
+    [id(2.3)];
+    it("Cek default sort list guru", () => {
+      cy.visit(configAcademicGuru.path);
+      cy.wait(800);
+
+      waitUntilLoadingAnimationGone().then(() => {
+        buttonDropdownSelect("10", "50", "10")
+          .then(waitUntilLoadingAnimationGone)
+          .then(() => {
+            return buttonDropdownTableColumnMenuItem(
+              "Nama",
+              "Menaik",
+              "Menaik",
+              false,
+            );
+          })
+          .then(() => {
+            // nth second column
+            cy.get("tbody tr td:nth-child(2) p").then(($paragraphs) => {
+              // 1. Ekstrak dan bersihkan teks dari elemen <p>
+              const originalNames = [...$paragraphs].map((p) =>
+                p.textContent.trim().toLowerCase(),
+              );
+              // 2. Buat salinan yang terurut dengan localeCompare dan sensitivity 'base'
+              const sortedNames = [...originalNames].sort((a, b) =>
+                a.localeCompare(b, undefined, { sensitivity: "base" }),
+              );
+              cy.log(
+                JSON.stringify(originalNames),
+                JSON.stringify(sortedNames),
+              );
+              // 3. Pastikan urutannya sama
+              expect(originalNames).to.deep.equal(sortedNames);
+            });
+          });
+      });
+    });
+
+    [id(2.4)];
+    it("Ketik Nama Guru di search box", () => {
+      cy.visit(configAcademicGuru.path);
+      cy.wait(800);
+
+      const input = configAcademicGuru.dataSearch.nama;
+      searchInput(input);
+
+      waitUntilLoadingAnimationGone().then(() => {
+        cy.get("table tbody tr").each((row) => {
+          cy.wrap(row).should("contain", input);
+        });
+      });
+    });
+
+    [id(2.5)];
+    it("Ketik Nomor Kartu / Jenis / Instansi di search box", () => {
+      cy.visit(configAcademicGuru.path);
+      cy.wait(800);
+
+      const listInput = [
+        configAcademicGuru.dataSearch.nama,
+        configAcademicGuru.dataSearch.nomorKartu,
+        configAcademicGuru.dataSearch.jenis,
+        configAcademicGuru.dataSearch.instansi,
+      ];
+
+      forEachWrap(listInput, (item, idx) => {
+        searchInput(item);
+        waitUntilLoadingAnimationGone().then(() => {
+          cy.get("table tbody tr").each((row) => {
+            cy.wrap(row).should("contain", item);
+          });
+        });
+        cy.wait(800);
+        searchInput("");
+      });
+    });
+
+    [id(2.6)];
+    it("Search dengan keyword yang tidak match", () => {
+      cy.visit(configAcademicGuru.path);
+      cy.wait(800);
+
+      searchInput("Apapun Itu");
+      waitUntilLoadingAnimationGone().then(() => {
+        cy.get("tbody td").should("contain.text", "Data Guru tidak ditemukan");
+      });
+    });
+
+    [id(2.7)];
+    it("Aktifkan Filter Instansi", () => {
+      cy.visit(configAcademicGuru.path);
+      cy.wait(800);
+
+      const instansiTypeChoosen = configAcademicGuru.misc.instansiType[4];
+      filterButtonClick(instansiTypeChoosen);
+
+      waitUntilLoadingAnimationGone().then(() => {
+        cy.get("tbody tr").each(($row) => {
+          cy.wrap($row).within(() => {
+            cy.get("td").should("contain.text", instansiTypeChoosen);
+          });
+        });
+      });
+    });
+
+    [id(2.8)];
+    it("Aktifkan Filter Jenis", () => {
+      cy.visit(configAcademicGuru.path);
+      cy.wait(800);
+
+      const instansiTypeChoosen = configAcademicGuru.misc.instansiType[4];
+      const jenisGuruChoosen = "Guru Tetap";
+      filterButtonClick(instansiTypeChoosen, jenisGuruChoosen);
+
+      waitUntilLoadingAnimationGone().then(() => {
+        cy.get("tbody tr").each(($row) => {
+          cy.wrap($row).within(() => {
+            cy.get("td").should("contain.text", instansiTypeChoosen);
+            cy.get("td").should("contain.text", jenisGuruChoosen);
+          });
+        });
+      });
+    });
+
+    [id(2.9)];
+    it("Aktifkan Filter Status (Aktif / Tidak Aktif)", () => {
+      cy.visit(configAcademicGuru.path);
+      cy.wait(800);
+
+      filterButtonClick("Semua", "Semua", "Tidak Aktif");
+
+      waitUntilLoadingAnimationGone().then(() => {
+        cy.get("tbody tr").each(($row) => {
+          cy.wrap($row).within(() => {
+            cy.get("td").should("contain.text", "Tidak Aktif");
+          });
+        });
+      });
+    });
+
+    [id("2.10")];
+    it("Filter aktif tidak ada hasil match", () => {
+      cy.visit(configAcademicGuru.path);
+      cy.wait(800);
+
+      const instansiTypeChoosen = configAcademicGuru.misc.instansiType[4];
+      const jenisGuruChoosen = "Guru Tetap";
+      filterButtonClick(instansiTypeChoosen, jenisGuruChoosen, "Tidak Aktif");
+
+      waitUntilLoadingAnimationGone().then(() => {
+        cy.get("tbody td").should("contain.text", "Data Guru tidak ditemukan");
+      });
     });
   });
 
   [group(2.11, 2.14)];
-  describe("2. Teacher List - Excel Export Scenarios @AGT", () => {});
+  describe.only("2. Teacher List - Excel Export Scenarios @AGT", () => {});
 
   [group(2.15, 2.27)];
   describe("3. Teacher Detail - Profile & Basic Info Validation @AGT", () => {});

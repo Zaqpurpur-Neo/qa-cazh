@@ -7,6 +7,33 @@ export const configAcademicGuru = {
     password: Cypress.env("SECOND_PASSWORD_EMAIL"),
     pin: 999999, // Cypress.env("SECOND_AUTH_PIN"),
   },
+
+  misc: {
+    tableHeader: [
+      "",
+      "Nama",
+      "Nomor Kartu",
+      "Jenis",
+      "Instansi",
+      "Status",
+      "",
+      "",
+    ],
+    instansiType: [
+      "Semua",
+      "Academy CAZH",
+      "Academy QA Engineer",
+      "Sekolah Digital Indonesia",
+      "Yayasan New School",
+    ],
+  },
+
+  dataSearch: {
+    nama: "Fajar Guru",
+    nomorKartu: "1002992454565340",
+    jenis: "Guru Tetap",
+    instansi: "Yayasan New School",
+  },
 };
 
 export function buttonDropdownSelect(
@@ -24,6 +51,30 @@ export function buttonDropdownSelect(
     .contains("div[role='option']", optionSelect)
     .should("be.visible")
     .click({ force: true });
+}
+
+export function buttonDropdownTableColumnMenuItem(
+  message = "Filter",
+  optionSelect = "Semua",
+  firstItemIndicator = "Semua",
+  clickTheOption = true,
+) {
+  buttonClick(message);
+
+  return cy
+    .get(`div[data-radix-popper-content-wrapper]`)
+    .last()
+    .should("contain.text", firstItemIndicator)
+    .should("be.visible")
+    .contains("div[role='menuitem']", optionSelect)
+    .should("be.visible")
+    .then(() => {
+      if (clickTheOption) {
+        cy.contains("div[role='menuitem']", optionSelect).click({
+          force: true,
+        });
+      }
+    });
 }
 
 export function simpleFillFormField(find, type, value) {
@@ -260,6 +311,46 @@ export function isItemExist(kodeMapelAtauNamaMapel, instansi) {
       timeout: 12000,
     }).length > 0
   );
+}
+
+export function searchInput(value = "") {
+  if (value && value.length > 0) {
+    return cy.get("input[data-slot='input'][placeholder='Cari']").type(value);
+  }
+  return cy.get("input[data-slot='input'][placeholder='Cari']").clear();
+}
+
+export function chooseFilterOption(
+  optionName = "",
+  optionValue = "Semua",
+  firstItemIndicator = "Semua",
+) {
+  cy.contains(`div[data-slot="dropdown-menu-label"]`, optionName)
+    .should("be.visible")
+    .next("button")
+    .click();
+
+  cy.get(`div[data-radix-popper-content-wrapper]`)
+    .should("have.length", 2)
+    .last()
+    .should("contain.text", firstItemIndicator)
+    .should("be.visible")
+    .contains(`div[role="option"]`, optionValue)
+    .click({ force: true });
+}
+
+export function filterButtonClick(
+  instansi = "Semua",
+  jenisGuru = "Semua",
+  status = "Semua",
+) {
+  buttonClick("Filter");
+
+  chooseFilterOption("Instansi", instansi, "Semua");
+  chooseFilterOption("Jenis Guru", jenisGuru, "Semua");
+  chooseFilterOption("Status", status, "Semua");
+
+  buttonClick("Filter");
 }
 
 export function id(id) {
