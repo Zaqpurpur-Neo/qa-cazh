@@ -58,24 +58,24 @@ export function checkNotificationOpen(message = "") {
 export function _localLoginSession() {
   cy.session(
     [
-      configMapel.userTestingAccount.email,
-      configMapel.userTestingAccount.password,
+      configAcademicGuru.userTestingAccount.email,
+      configAcademicGuru.userTestingAccount.password,
     ],
     () => {
-      cy.visit(configMapel.loginPath);
+      cy.visit(configAcademicGuru.loginPath);
 
       cy.wait(400);
       cy.contains("label", "Email")
         .click()
-        .type(configMapel.userTestingAccount.email);
+        .type(configAcademicGuru.userTestingAccount.email);
       cy.wait(400);
       cy.get("input[type='password']")
         .click()
-        .type(configMapel.userTestingAccount.password);
+        .type(configAcademicGuru.userTestingAccount.password);
       cy.wait(400);
       cy.contains("button", "Masuk").click();
 
-      cy.url().should("not.include", configMapel.loginPath);
+      cy.url().should("not.include", configAcademicGuru.loginPath);
     },
   );
 }

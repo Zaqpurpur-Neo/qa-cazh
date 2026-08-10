@@ -16,8 +16,14 @@ describe("TEST-CASE: 2.XX | Anggota Guru", () => {
     uncaughtHandle();
   });
 
-  [group(2.1, 2.1)];
-  describe("1. Teacher List - View, Sort, Search & Filter @AGT", () => {});
+  [group(2.1, "2.10")];
+  describe("1. Teacher List - View, Sort, Search & Filter @AGT", () => {
+    [id(2.1)];
+    it("Load halaman Guru", () => {
+      cy.visit(configAcademicGuru.path);
+      cy.wait(800);
+    });
+  });
 
   [group(2.11, 2.14)];
   describe("2. Teacher List - Excel Export Scenarios @AGT", () => {});
@@ -31,7 +37,7 @@ describe("TEST-CASE: 2.XX | Anggota Guru", () => {
   [group(2.45, 2.47)];
   describe("5. Teacher Detail - Billing Tab Overview @AGT", () => {});
 
-  [group(2.48, 2.6)];
+  [group(2.48, "2.60")];
   describe("6. Teacher Detail - Documents Tab Operations @AGT", () => {});
 
   [group(2.61, 2.85)];
@@ -46,7 +52,7 @@ describe("TEST-CASE: 2.XX | Anggota Guru", () => {
   [group(2.105, 2.112)];
   describe("10. Teacher Management - Add Teacher Form @AGT", () => {});
 
-  [group(2.113, 2.12)];
+  [group(2.113, "2.120")];
   describe("11. Main List - Institution Transfer @AGT", () => {});
 
   [group(2.121, 2.126)];
@@ -67,7 +73,7 @@ describe("TEST-CASE: 2.XX | Anggota Guru", () => {
   [group(2.166, 2.189)];
   describe("17. Teacher Detail - Health Tab (Kesehatan) @AGT", () => {});
 
-  [group(2.19, 2.207)];
+  [group("2.190", 2.207)];
   describe("18. Teacher Detail - Perizinan Deep Dive & Attendance Sync @AGT", () => {});
 
   [group(2.208, 2.218)];

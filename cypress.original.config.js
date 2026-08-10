@@ -7,7 +7,7 @@ require("dotenv").config();
 const pgtPlugin = {
   name: "esbuild-pgt-transformer",
   setup(build) {
-    build.onLoad({ filter: /\.(cy|spec|test)\.[jt]sx?$/ }, (args) => {
+    build.onLoad({ filter: /\.(cy|nte|spec|test)\.[jt]sx?$/ }, (args) => {
       let contents = fs.readFileSync(args.path, "utf8");
 
       // 1. Detect and strip [name("PREFIX")] or [name(PREFIX)] to set file-level prefix
