@@ -1,66 +1,97 @@
 # QA Cazh Automation Testing
 
-Framework: **Cypress**.
+Framework: **Cypress** (E2E).
 
 ## Prerequisites
 
-Before getting started, make sure you have the following installed on your system:
-*   [Node.js](https://nodejs.org/) (LTS version recommended)
-*   [Yarn](https://yarnpkg.com/) (or npm pre-installed with Node.js)
-*   [Git](https://git-scm.com/)
-
----
+- [Node.js](https://nodejs.org/) (LTS recommended)
+- One of: [npm](https://www.npmjs.com/), [yarn](https://yarnpkg.com/), or [pnpm](https://pnpm.io/)
 
 ## Installation
 
-Follow the steps below to set up the project locally:
+Using npm:
 
-1.  **Clone the Repository**
-    ```bash
-    git clone https://github.com/faleroid/qa-cazh.git
-    cd qa-cazh
-    ```
+```bash
+npm install
+```
 
-2.  **Install Dependencies**
-    You can use `yarn` (recommended as there is a `yarn.lock` file) or `npm`:
-    ```bash
-    # Using Yarn
-    yarn install
+Using yarn:
 
-    # Or using NPM
-    npm install
-    ```
+```bash
+yarn install
+```
 
----
+Using pnpm:
+
+```bash
+pnpm install
+```
+
+Then create your environment file:
+
+```bash
+cp .env.example .env
+```
+
+Fill in the real credentials/values inside `.env`. Do not commit `.env` to the repository.
 
 ## Running Cypress
 
-Once the installation is complete, you can run Cypress using one of the following methods:
+### Interactive Mode (Test Runner)
 
-### 1. Run Cypress Test Runner (Interactive Mode)
-This opens the Cypress graphical user interface (GUI) to select and view the test execution visually.
 ```bash
-# Using Yarn
+# npm
+npm run engine:startup
+
+# yarn
+yarn engine:startup
+
+# pnpm
+pnpm engine:startup
+```
+
+This opens the Cypress GUI with Chromium and uses `cypress.original.config.js` (includes the esbuild preprocessor / test-ID transformer).
+
+Alternative:
+
+```bash
+# npm
+npx cypress open
+
+# yarn
 yarn cypress open
 
-# Or using NPM
-npx cypress open
+# pnpm
+pnpm exec cypress open
 ```
 
-### 2. Run Cypress in Background (Headless Mode)
-This runs all the tests directly in the terminal (suitable for CI/CD environments).
+### Headless Mode (CI / terminal)
+
 ```bash
-# Using Yarn
+# npm
+npx cypress run
+
+# yarn
 yarn cypress run
 
-# Or using NPM
-npx cypress run
+# pnpm
+pnpm exec cypress run
 ```
 
----
+## Useful Commands
 
-## Project Directory Structure
-*   `cypress/e2e/`: Contains the automated test files (`.cy.js`).
-*   `cypress/fixtures/`: Contains static test data (such as login credentials or mock payloads).
-*   `cypress/support/`: Helper configuration files (custom commands and global setups).
-*   `cypress.config.js`: The main Cypress configuration file.
+| Command | Description |
+| --- | --- |
+| `npm run engine:startup` / `yarn engine:startup` / `pnpm engine:startup` | Open Cypress GUI (Chromium, `cypress.original.config.js`) |
+| `npx cypress run` / `yarn cypress run` / `pnpm exec cypress run` | Run all tests headless |
+| `npm run git:add:all` / `yarn git:add:all` / `pnpm git:add:all` | `git add .` |
+| `npm run git:commit` / `yarn git:commit` / `pnpm git:commit` | `git commit -m "message"` |
+| `npm run git:push:all` / `yarn git:push:all` / `pnpm git:push:all` | Push to `origin main` and `collab main:feature-others` |
+
+## Project Structure
+
+- `cypress/e2e/` - Test files (`.cy.js`)
+- `cypress/fixtures/` - Static test data
+- `cypress/support/` - Custom commands and global setup
+- `cypress.config.js` - Default Cypress config
+- `cypress.original.config.js` - Config with the esbuild/PGT transformer used by `engine:startup`
