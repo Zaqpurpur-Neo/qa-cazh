@@ -118,6 +118,23 @@ export const configMapel = {
   },
 };
 
+export function buttonDropdownSelect(
+  message = "Filter",
+  optionSelect = "Semua",
+  firstItemIndicator = "Semua",
+) {
+  buttonClick(message);
+
+  return cy
+    .get(`div[data-radix-popper-content-wrapper]`)
+    .last()
+    .should("contain.text", firstItemIndicator)
+    .should("be.visible")
+    .contains("div[role='option']", optionSelect)
+    .should("be.visible")
+    .click({ force: true });
+}
+
 export function simpleFillFormField(find, type, value) {
   cy.contains("label", find)
     .should("be.visible")

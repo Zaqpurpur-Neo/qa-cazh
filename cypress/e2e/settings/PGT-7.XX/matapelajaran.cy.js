@@ -18,6 +18,7 @@ import {
   id,
   name,
   group,
+  buttonDropdownSelect,
 } from "./extends";
 
 [name("PGT")];
@@ -436,7 +437,27 @@ describe("TEST-CASE: 7.XX | Mata Pelajaran", () => {
   });
 
   [group(7.18, 7.23)];
-  describe("4. Subject List - Filtering Scenarios @PGT", () => {});
+  describe.only("4. Subject List - Filtering Scenarios @PGT", () => {
+    [id(7.18)];
+    it("Aktifkan Filter Instansi (pilih 1 instansi)", () => {
+      cy.visit(configMapel.path);
+      cy.wait(800);
+
+      const fillData = configMapel.dataMapel.simpleFillFirst;
+
+      waitUntilLoadingAnimationGone().then(() => {
+        buttonDropdownSelect("Instansi", fillData.instansi[0], "Semua")
+          .then(waitUntilLoadingAnimationGone)
+          .then(() => {
+            cy.get("tbody tr").each(($row) =>
+              cy.wrap($row).within(() => {
+                cy.get("td").first().should("have.text", fillData.instansi[0]);
+              }),
+            );
+          });
+      });
+    });
+  });
 
   [group(7.24, 7.28)];
   describe("5. Subject List - Search Functionality @PGT", () => {});
