@@ -1,3 +1,4 @@
+import { parseExcel } from "../../../support/utilsExcel";
 import {
   configAcademicGuru,
   name,
@@ -11,6 +12,7 @@ import {
   waitUntilLoadingAnimationGone,
   forEachWrap,
   filterButtonClick,
+  buttonClick,
 } from "./extends";
 
 [name("AGT")];
@@ -221,10 +223,160 @@ describe("TEST-CASE: 2.XX | Anggota Guru", () => {
   });
 
   [group(2.11, 2.14)];
-  describe.only("2. Teacher List - Excel Export Scenarios @AGT", () => {});
+  describe("2. Teacher List - Excel Export Scenarios @AGT", () => {
+    [id("2.11")];
+    it("Klik Excel untuk Export tanpa filter/checklist", () => {
+      cy.visit(configAcademicGuru.path);
+      cy.wait(800);
+
+      const excelHeader = configAcademicGuru.misc.excelHeader;
+      const excelFilePath = configAcademicGuru.misc.excelFilePath;
+
+      cy.task("deleteFolder", excelFilePath);
+
+      waitUntilLoadingAnimationGone()
+        .wait(2000)
+        .then(() => {
+          buttonClick("Excel");
+
+          cy.task("getLatestDownloadedFile", {
+            folderPath: excelFilePath,
+            timeout: 12000,
+          }).then((latestFile) => {
+            const filePath = excelFilePath + latestFile;
+            expect(filePath).to.exist;
+
+            parseExcel(filePath).then((data) => {
+              if (data && data.length > 0) {
+                const keys = Object.keys(data[0]);
+
+                cy.log(JSON.stringify(keys), JSON.stringify(excelHeader));
+                expect(keys).to.deep.equal(excelHeader);
+              }
+            });
+          });
+        });
+    });
+
+    [id("2.12")];
+    it("Aktifkan filter → klik Excel, Sistem hanya export data yang sesuai filter", () => {
+      cy.visit(configAcademicGuru.path);
+      cy.wait(800);
+
+      const instansiTypeChoosen = configAcademicGuru.misc.instansiType[4];
+      filterButtonClick(instansiTypeChoosen);
+
+      const excelFilePath = configAcademicGuru.misc.excelFilePath;
+      cy.task("deleteFolder", excelFilePath);
+
+      waitUntilLoadingAnimationGone()
+        .wait(2000)
+        .then(() => {
+          buttonClick("Excel");
+
+          cy.task("getLatestDownloadedFile", {
+            folderPath: excelFilePath,
+            timeout: 12000,
+          }).then((latestFile) => {
+            const filePath = excelFilePath + latestFile;
+            expect(filePath).to.exist;
+
+            parseExcel(filePath).then((data) => {
+              if (data && data.length > 0) {
+                forEachWrap(data, (item) => {
+                  expect(item["Instansi"]).to.eq(instansiTypeChoosen);
+                });
+              }
+            });
+          });
+        });
+    });
+
+    [id(2.13)];
+    it("Search data → klik Excel, Sistem hanya export data hasil pencarian", () => {
+      cy.visit(configAcademicGuru.path);
+      cy.wait(800);
+
+      searchInput("Fajar Guru");
+      const excelFilePath = configAcademicGuru.misc.excelFilePath;
+      cy.task("deleteFolder", excelFilePath);
+
+      waitUntilLoadingAnimationGone()
+        .wait(2000)
+        .then(() => {
+          buttonClick("Excel");
+
+          cy.task("getLatestDownloadedFile", {
+            folderPath: excelFilePath,
+            timeout: 12000,
+          }).then((latestFile) => {
+            const filePath = excelFilePath + latestFile;
+            expect(filePath).to.exist;
+
+            parseExcel(filePath).then((data) => {
+              if (data && data.length > 0) {
+                forEachWrap(data, (item) => {
+                  expect(item["Nama Lengkap"]).to.eq("Fajar Guru");
+                });
+              }
+            });
+          });
+        });
+    });
+
+    [id(2.14)];
+    it("Checklist beberapa guru → klik Excel, Sistem hanya export data yang di-checklist", () => {
+      cy.visit(configAcademicGuru.path);
+      cy.wait(800);
+      const chosenName = ["Fajar Guru", "ahmed", "david", "Guru Rara"];
+      const excelFilePath = configAcademicGuru.misc.excelFilePath;
+      cy.task("deleteFolder", excelFilePath);
+
+      cy.wait(2000);
+
+      waitUntilLoadingAnimationGone()
+        .then(() => {
+          forEachWrap(chosenName, (name) => {
+            cy.get("tbody tr").each(($row) => {
+              const cellText = $row.find("td:nth-child(2) p").text().trim();
+              if (cellText === name) {
+                cy.wrap($row)
+                  .find("td:nth-child(1) button[role='checkbox']")
+                  .click({ force: true });
+
+                return false;
+              }
+            });
+          });
+        })
+        .wait(2000)
+        .then(() => {
+          buttonClick("Excel");
+
+          cy.task("getLatestDownloadedFile", {
+            folderPath: excelFilePath,
+            timeout: 12000,
+          }).then((latestFile) => {
+            const filePath = excelFilePath + latestFile;
+            expect(filePath).to.exist;
+
+            parseExcel(filePath).then((data) => {
+              if (data && data.length > 0) {
+                forEachWrap(data, (item) => {
+                  cy.wrap(chosenName).should("contain", item["Nama Lengkap"]);
+                });
+              }
+            });
+          });
+        });
+    });
+  });
 
   [group(2.15, 2.27)];
-  describe("3. Teacher Detail - Profile & Basic Info Validation @AGT", () => {});
+  describe.only("3. Teacher Detail - Profile & Basic Info Validation @AGT", () => {
+    [id(2.15)];
+    it("Klik Aksi → Lihat di row guru", () => {});
+  });
 
   [group(2.28, 2.44)];
   describe("4. Teacher Detail - Card, User, Wallet & Actions @AGT", () => {});

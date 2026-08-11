@@ -1,6 +1,7 @@
 const { defineConfig } = require("cypress");
 const createBundler = require("@bahmutov/cypress-esbuild-preprocessor");
 const fs = require("fs");
+const path = require("path");
 
 require("dotenv").config();
 
@@ -83,6 +84,58 @@ const pgtPlugin = {
   },
 };
 
+const taskConfig = {
+  getLatestDownloadedFile({
+    folderPath = "cypress/downloads",
+    timeout = 10000,
+  } = {}) {
+    const startTime = Date.now();
+
+    return new Promise((resolve) => {
+      const interval = setInterval(() => {
+        if (fs.existsSync(folderPath)) {
+          const files = fs
+            .readdirSync(folderPath)
+            // Ignore temporary in-progress download extensions (.crdownload, .tmp, .part)
+            .filter(
+              (file) =>
+                !file.endsWith(".crdownload") &&
+                !file.endsWith(".tmp") &&
+                !file.endsWith(".part"),
+            )
+            .map((file) => ({
+              file,
+              mtime: fs.statSync(path.join(folderPath, file)).mtime,
+            }))
+            .sort((a, b) => b.mtime - a.mtime);
+
+          // Found a completed file!
+          if (files.length > 0) {
+            clearInterval(interval);
+            return resolve(files[0].file);
+          }
+        }
+
+        // Timed out waiting for download to finish
+        if (Date.now() - startTime > timeout) {
+          clearInterval(interval);
+          return resolve(null);
+        }
+      }, 500); // Check every 500ms
+    });
+  },
+
+  deleteFolder(folderPath = "cypress/downloads") {
+    if (fs.existsSync(folderPath)) {
+      // Delete folder and everything inside it
+      fs.rmSync(folderPath, { recursive: true, force: true });
+      // Recreate empty folder so Cypress can still download into it
+      fs.mkdirSync(folderPath, { recursive: true });
+    }
+    return null; // Tasks must return something or null
+  },
+};
+
 module.exports = defineConfig({
   allowCypressEnv: true,
 
@@ -118,6 +171,8 @@ module.exports = defineConfig({
           launchOptions.args.push("--disable-application-cache");
         }
       });
+
+      on("task", taskConfig);
 
       config.env.AUTH_EMAIL = process.env.AUTH_EMAIL;
       config.env.PASSWORD_EMAIL = process.env.PASSWORD_EMAIL;

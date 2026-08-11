@@ -26,6 +26,25 @@ export const configAcademicGuru = {
       "Sekolah Digital Indonesia",
       "Yayasan New School",
     ],
+    excelHeader: [
+      //"ID",
+      "No Kartu",
+      "No Induk",
+      "Kode QR",
+      "Nama Lengkap",
+      "Tempat Lahir",
+      "Tanggal Lahir",
+      "Jenis Kelamin",
+      "Alamat",
+      "No Telepon",
+      "Instansi",
+      "Keterangan",
+      "Tanggal Mulai Tugas",
+      "Pangkat/Golongan",
+      "Jabatan",
+      "Status",
+    ],
+    excelFilePath: "cypress/downloads/",
   },
 
   dataSearch: {
@@ -149,11 +168,11 @@ export function uncaughtHandle() {
 export function waitUntilLoadingAnimationGone() {
   return cy.get("body").then(($body) => {
     return cy
-      .get("tr .animate-pulse", { timeout: 12000 })
+      .get("tbody tr td .animate-pulse", { timeout: 12000 })
       .should("not.exist")
       .then(() => {
         return cy
-          .get("tr .animate-pulse", { timeout: 12000 })
+          .get("tbody tr td .animate-pulse", { timeout: 12000 })
           .should("not.exist")
           .then(() => {
             return cy.wrap($body);
